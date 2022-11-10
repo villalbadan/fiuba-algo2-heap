@@ -3,7 +3,7 @@ package cola_prioridad
 const (
 	_TAMANIO_INICIAL    = 10
 	_FACTOR_REDIMENSION = 2
-	_AGRANDAR           = 4
+	_PROPORCION_MIN     = 4
 )
 
 type funcCmp[T comparable] func(T, T) int
@@ -21,8 +21,20 @@ func CrearHeap[T comparable](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 	return heap
 }
 
+func (heap *colaPrioridad[T]) heapify() {
+	for i := heap.cantidad - 1; i >= 0; i-- {
+		heap.downheap(heap.datos[i], i)
+	}
+}
+
 func CrearHeapArr[T comparable](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
-	return new(colaPrioridad[T])
+	heapArr := new(colaPrioridad[T])
+	heapArr.datos = arreglo
+	heapArr.cmp = funcion_cmp
+	heapArr.cantidad = len(arreglo)
+	heapArr.heapify()
+
+	return heapArr
 }
 
 func HeapSort[T comparable](elementos []T, funcion_cmp func(T, T) int) {
@@ -69,7 +81,7 @@ func hijoDer(indice int) int {
 }
 
 // SwapIndices intercambia los valores en los indices indicados por parametro
-func (heap colaPrioridad[T]) SwapIndices(i, j int) {
+func (heap *colaPrioridad[T]) SwapIndices(i, j int) {
 	heap.datos[i], heap.datos[j] = heap.datos[j], heap.datos[i]
 }
 
@@ -78,7 +90,7 @@ func (heap colaPrioridad[T]) condicionHeap(actual, padre T) bool {
 	return heap.cmp(actual, padre) < 0 || actual == padre
 }
 
-func (heap colaPrioridad[T]) upheap(elem T, pos int) {
+func (heap *colaPrioridad[T]) upheap(elem T, pos int) {
 	if pos == 0 {
 		return
 	}
@@ -89,20 +101,24 @@ func (heap colaPrioridad[T]) upheap(elem T, pos int) {
 	}
 }
 
-func (heap colaPrioridad[T]) downheap(elem T, pos int) {
+func (heap *colaPrioridad[T]) downheap(elem T, pos int) {
 	if pos == heap.cantidad-1 {
 		return
 	}
 
-	var (
-		posHijoIzq    = hijoIzq(pos)
-		posHijoDer    = hijoDer(pos)
-		hijoIzqCumple = posHijoIzq >= heap.cantidad || !heap.condicionHeap(elem, heap.datos[posHijoIzq])
-		hijoDerCumple = posHijoDer >= heap.cantidad || !heap.condicionHeap(elem, heap.datos[posHijoDer])
-	)
+	var posHijoIzq = hijoIzq(pos)
+	var posHijoDer = hijoDer(pos)
 
-	if !hijoIzqCumple || !hijoDerCumple {
-		nuevoIndice := heap.hijoMax(heap.datos[posHijoIzq], heap.datos[posHijoDer], posHijoIzq, posHijoDer)
+	if posHijoIzq >= heap.cantidad {
+		return
+	}
+
+	nuevoIndice := posHijoIzq
+	if posHijoDer < heap.cantidad {
+		nuevoIndice = heap.hijoMax(heap.datos[posHijoIzq], heap.datos[posHijoDer], posHijoIzq, posHijoDer)
+	}
+
+	if !heap.condicionHeap(heap.datos[nuevoIndice], elem) {
 		heap.SwapIndices(pos, nuevoIndice)
 		heap.downheap(elem, nuevoIndice)
 	}
@@ -147,7 +163,7 @@ func (heap *colaPrioridad[T]) Desencolar() T {
 	heap.SwapIndices(0, heap.cantidad)
 	heap.downheap(heap.datos[0], 0)
 
-	if (len(heap.datos) >= heap.cantidad*_AGRANDAR) && (len(heap.datos)/_FACTOR_REDIMENSION >= _TAMANIO_INICIAL) {
+	if (len(heap.datos) >= heap.cantidad*_PROPORCION_MIN) && (len(heap.datos)/_FACTOR_REDIMENSION >= _TAMANIO_INICIAL) {
 		heap.redimensionar(len(heap.datos) / _FACTOR_REDIMENSION)
 	}
 

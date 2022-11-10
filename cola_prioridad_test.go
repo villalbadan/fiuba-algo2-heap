@@ -12,6 +12,8 @@ const (
 	_ELEM_TEST_COMUN   = 15
 )
 
+var ARREGLO_INTS = []int{4, 5, 6, 1, 2, 9, 7, 0, 8, 3}
+
 //FUNC CMP -----------------------------------------------------------------------------------------------------------
 
 func mayorEntreInts(clave1, clave2 int) int {
@@ -35,7 +37,8 @@ func TestColaVacia(t *testing.T) {
 	colaVacia(heap, t)
 }
 
-func TestEncolarVariosElementos(t *testing.T) {
+func TestEncolarVariosElementosOrdenados(t *testing.T) {
+	t.Log("Al encolar varios elementos en orden ascendente, VerMax y Cantidad devuelven lo deseado")
 	heap := TDAHeap.CrearHeap[int](mayorEntreInts)
 	for i := 0; i <= _ELEM_TEST_COMUN; i++ {
 		heap.Encolar(i)
@@ -82,4 +85,32 @@ func TestDesencolarHastaVacia(t *testing.T) {
 	}
 	colaVacia(heap, t)
 
+}
+
+func TestColaDeStrings(t *testing.T) {
+	t.Log("Prueba con cadenas")
+	nombres := TDAHeap.CrearHeap[string](mayorEntreStrings)
+	nombres.Encolar("Daniela")
+	require.EqualValues(t, "Daniela", nombres.VerMax())
+	nombres.Encolar("Anibal")
+	require.EqualValues(t, "Daniela", nombres.VerMax())
+	nombres.Encolar("Matias")
+	require.EqualValues(t, "Matias", nombres.VerMax())
+	require.EqualValues(t, "Matias", nombres.Desencolar())
+	require.EqualValues(t, "Daniela", nombres.VerMax())
+	require.EqualValues(t, "Daniela", nombres.Desencolar())
+	require.EqualValues(t, "Anibal", nombres.VerMax())
+	require.EqualValues(t, "Anibal", nombres.Desencolar())
+	colaVacia(nombres, t)
+
+}
+
+func TestHeapify(t *testing.T) {
+	t.Log("")
+	heapArr := TDAHeap.CrearHeapArr(ARREGLO_INTS, mayorEntreInts)
+	for i := 9; i >= 0; i-- {
+		require.EqualValues(t, heapArr.Cantidad(), i+1)
+		require.EqualValues(t, heapArr.VerMax(), i)
+		require.EqualValues(t, heapArr.Desencolar(), i)
+	}
 }
