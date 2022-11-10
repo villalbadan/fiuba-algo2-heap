@@ -106,11 +106,19 @@ func TestColaDeStrings(t *testing.T) {
 }
 
 func TestHeapify(t *testing.T) {
-	t.Log("")
+	t.Log("Heapify funciona como un heap")
 	heapArr := TDAHeap.CrearHeapArr(ARREGLO_INTS, mayorEntreInts)
 	for i := 9; i >= 0; i-- {
 		require.EqualValues(t, heapArr.Cantidad(), i+1)
 		require.EqualValues(t, heapArr.VerMax(), i)
 		require.EqualValues(t, heapArr.Desencolar(), i)
+	}
+	colaVacia(heapArr, t)
+}
+
+func TestHeapsort(t *testing.T) {
+	arr := TDAHeap.HeapSort(ARREGLO_INTS, mayorEntreInts)
+	for i := 0; i < 10; i++ {
+		require.EqualValues(t, i, arr[i])
 	}
 }

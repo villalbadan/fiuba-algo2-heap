@@ -21,7 +21,12 @@ func CrearHeap[T comparable](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 	return heap
 }
 
-func (heap *colaPrioridad[T]) heapify() {
+// HEAPIFY -----------------------------------------------------------------------------------------------------------
+
+func (heap *colaPrioridad[T]) heapify(arreglo []T, funcion_cmp func(T, T) int) {
+	heap.datos = arreglo
+	heap.cmp = funcion_cmp
+	heap.cantidad = len(arreglo)
 	for i := heap.cantidad - 1; i >= 0; i-- {
 		heap.downheap(heap.datos[i], i)
 	}
@@ -29,16 +34,27 @@ func (heap *colaPrioridad[T]) heapify() {
 
 func CrearHeapArr[T comparable](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
 	heapArr := new(colaPrioridad[T])
-	heapArr.datos = arreglo
-	heapArr.cmp = funcion_cmp
-	heapArr.cantidad = len(arreglo)
-	heapArr.heapify()
-
+	heapArr.heapify(arreglo, funcion_cmp)
 	return heapArr
 }
 
-func HeapSort[T comparable](elementos []T, funcion_cmp func(T, T) int) {
-	return
+// HEAPSORT -----------------------------------------------------------------------------------------------------------
+
+func (heap *colaPrioridad[T]) ordenarArreglo() {
+	if heap.cantidad == 0 {
+		return
+	}
+	heap.cantidad--
+	heap.swapIndices(0, heap.cantidad)
+	heap.downheap(heap.datos[0], 0)
+	heap.ordenarArreglo()
+}
+
+func HeapSort[T comparable](elementos []T, funcion_cmp func(T, T) int) []T {
+	heapArr := new(colaPrioridad[T])
+	heapArr.heapify(elementos, funcion_cmp)
+	heapArr.ordenarArreglo()
+	return heapArr.datos
 }
 
 // AUXILIARES ---------------------------------------------------------------------------------------------------------
@@ -51,7 +67,7 @@ func (heap *colaPrioridad[T]) redimensionar(nuevoTamanio int) {
 
 // Calculo de padres e hijos >>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-//max recibe dos elementos en un arreglo y sus posiciones y devuelve la posicion del mayor.
+//hijoMax recibe dos elementos en un arreglo y sus posiciones y devuelve la posicion del mayor.
 //En caso de que sean iguales, devuelve la posición del primero.
 func (heap colaPrioridad[T]) hijoMax(x T, y T, posX int, posY int) int {
 	if heap.cmp(y, x) > 0 && posY < heap.cantidad {
@@ -80,8 +96,8 @@ func hijoDer(indice int) int {
 	return 2*indice + 2
 }
 
-// SwapIndices intercambia los valores en los indices indicados por parametro
-func (heap *colaPrioridad[T]) SwapIndices(i, j int) {
+// swapIndices recibe dos indices de un array e intercambia los valores guardados en el indice
+func (heap *colaPrioridad[T]) swapIndices(i, j int) {
 	heap.datos[i], heap.datos[j] = heap.datos[j], heap.datos[i]
 }
 
@@ -96,7 +112,7 @@ func (heap *colaPrioridad[T]) upheap(elem T, pos int) {
 	}
 
 	if !heap.condicionHeap(elem, heap.datos[padre(pos)]) {
-		heap.SwapIndices(pos, padre(pos))
+		heap.swapIndices(pos, padre(pos))
 		heap.upheap(elem, padre(pos))
 	}
 }
@@ -109,6 +125,7 @@ func (heap *colaPrioridad[T]) downheap(elem T, pos int) {
 	var posHijoIzq = hijoIzq(pos)
 	var posHijoDer = hijoDer(pos)
 
+	//es necesario controlar que las posiciones calculadas para los hijos esten dentro de los lim. del arreglo
 	if posHijoIzq >= heap.cantidad {
 		return
 	}
@@ -119,7 +136,7 @@ func (heap *colaPrioridad[T]) downheap(elem T, pos int) {
 	}
 
 	if !heap.condicionHeap(heap.datos[nuevoIndice], elem) {
-		heap.SwapIndices(pos, nuevoIndice)
+		heap.swapIndices(pos, nuevoIndice)
 		heap.downheap(elem, nuevoIndice)
 	}
 
@@ -160,7 +177,7 @@ func (heap *colaPrioridad[T]) Desencolar() T {
 	}
 
 	heap.cantidad--
-	heap.SwapIndices(0, heap.cantidad)
+	heap.swapIndices(0, heap.cantidad)
 	heap.downheap(heap.datos[0], 0)
 
 	if (len(heap.datos) >= heap.cantidad*_PROPORCION_MIN) && (len(heap.datos)/_FACTOR_REDIMENSION >= _TAMANIO_INICIAL) {
