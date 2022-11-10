@@ -54,7 +54,7 @@ func HeapSort[T comparable](elementos []T, funcion_cmp func(T, T) int) []T {
 	heapArr := new(colaPrioridad[T])
 	heapArr.heapify(elementos, funcion_cmp)
 	heapArr.ordenarArreglo()
-	return heapArr.datos
+	return elementos
 }
 
 // AUXILIARES ---------------------------------------------------------------------------------------------------------
