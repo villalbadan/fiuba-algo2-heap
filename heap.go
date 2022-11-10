@@ -6,6 +6,8 @@ const (
 	_AGRANDAR           = 4
 )
 
+type funcCmp[T comparable] func(T, T) int
+
 type colaPrioridad[T comparable] struct {
 	datos    []T
 	cantidad int
@@ -14,16 +16,17 @@ type colaPrioridad[T comparable] struct {
 
 func CrearHeap[T comparable](funcion_cmp func(T, T) int) ColaPrioridad[T] {
 	heap := new(colaPrioridad[T])
+	heap.datos = make([]T, _TAMANIO_INICIAL)
 	heap.cmp = funcion_cmp
 	return heap
 }
 
 func CrearHeapArr[T comparable](arreglo []T, funcion_cmp func(T, T) int) ColaPrioridad[T] {
-
+	return new(colaPrioridad[T])
 }
 
 func HeapSort[T comparable](elementos []T, funcion_cmp func(T, T) int) {
-
+	return
 }
 
 // AUXILIARES ---------------------------------------------------------------------------------------------------------
@@ -34,9 +37,15 @@ func (heap *colaPrioridad[T]) redimensionar(nuevoTamanio int) {
 	copy(heap.datos, temp)
 }
 
-// SwapIndices intercambia los valores de los indices indicados
-func (heap colaPrioridad[T]) SwapIndices(i, j int) {
-	heap.datos[i], heap.datos[j] = heap.datos[j], heap.datos[i]
+// Calculo de padres e hijos >>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+//max recibe dos elementos en un arreglo y sus posiciones y devuelve la posicion del mayor.
+//En caso de que sean iguales, devuelve la posición del primero.
+func (heap colaPrioridad[T]) hijoMax(x T, y T, posX int, posY int) int {
+	if heap.cmp(y, x) > 0 && posY < heap.cantidad {
+		return posY
+	}
+	return posX
 }
 
 //abs devuelve el valor absoluto de un integer
@@ -46,8 +55,6 @@ func abs(n int) int {
 	}
 	return n
 }
-
-// Calculo de padres e hijos >>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func padre(indice int) int {
 	return abs((indice - 1) / 2)
@@ -61,18 +68,44 @@ func hijoDer(indice int) int {
 	return 2*indice + 2
 }
 
-func (heap colaPrioridad[T]) condicionHeapPadre (hijo, padre T) bool {
-	return heap.cmp(hijo, padre)
+// SwapIndices intercambia los valores en los indices indicados por parametro
+func (heap colaPrioridad[T]) SwapIndices(i, j int) {
+	heap.datos[i], heap.datos[j] = heap.datos[j], heap.datos[i]
 }
 
-func (heap colaPrioridad[T]) upheap (elem T, pos int){
-	if !heap.condicionHeapPadre(elem, heap.datos[padre(pos)]){
+//condicionHeapPadre devuelve True si el padre es mayor o igual al hijo que estamos evaluando actualmente
+func (heap colaPrioridad[T]) condicionHeap(actual, padre T) bool {
+	return heap.cmp(actual, padre) < 0 || actual == padre
+}
+
+func (heap colaPrioridad[T]) upheap(elem T, pos int) {
+	if pos == 0 {
+		return
+	}
+
+	if !heap.condicionHeap(elem, heap.datos[padre(pos)]) {
 		heap.SwapIndices(pos, padre(pos))
 		heap.upheap(elem, padre(pos))
 	}
 }
 
-func (heap colaPrioridad[T]) downheap {
+func (heap colaPrioridad[T]) downheap(elem T, pos int) {
+	if pos == heap.cantidad-1 {
+		return
+	}
+
+	var (
+		posHijoIzq    = hijoIzq(pos)
+		posHijoDer    = hijoDer(pos)
+		hijoIzqCumple = posHijoIzq >= heap.cantidad || !heap.condicionHeap(elem, heap.datos[posHijoIzq])
+		hijoDerCumple = posHijoDer >= heap.cantidad || !heap.condicionHeap(elem, heap.datos[posHijoDer])
+	)
+
+	if !hijoIzqCumple || !hijoDerCumple {
+		nuevoIndice := heap.hijoMax(heap.datos[posHijoIzq], heap.datos[posHijoDer], posHijoIzq, posHijoDer)
+		heap.SwapIndices(pos, nuevoIndice)
+		heap.downheap(elem, nuevoIndice)
+	}
 
 }
 
@@ -92,7 +125,6 @@ func (heap *colaPrioridad[T]) Encolar(elem T) {
 	heap.datos[heap.cantidad] = elem
 	heap.upheap(elem, heap.cantidad)
 	heap.cantidad++
-
 }
 
 // VerMax devuelve el elemento con máxima prioridad. Si está vacía, entra en pánico con un mensaje
