@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/require"
 	"math/rand"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -14,9 +15,11 @@ const (
 )
 
 var (
-	TAMS_VOLUMEN    = []int{12500, 25000, 50000, 100000, 200000, 400000}
-	ARREGLO_STRINGS = []string{"G", "K", "M", "B", "C", "W", "O", "A", "V", "F"}
-	ARREGLO_INTS    = []int{4, 5, 6, 1, 2, 9, 7, 0, 8, 3}
+	TAMS_VOLUMEN              = []int{12500, 25000, 50000, 100000, 200000, 400000}
+	ARREGLO_STRINGS           = []string{"G", "K", "M", "B", "C", "W", "O", "A", "V", "F"}
+	ARREGLO_STRINGS_REPETIDOS = []string{"Do", "Re", "Si", "Fa", "Re", "Do"}
+	ARREGLO_INTS              = []int{4, 5, 6, 1, 2, 9, 7, 0, 8, 3}
+	ARREGLO_INTS_REPETIDOS    = []int{2, 3, 5, 1, 3, 1}
 )
 
 //FUNC CMP -----------------------------------------------------------------------------------------------------------
@@ -134,11 +137,107 @@ func TestHeapify(t *testing.T) {
 	colaVacia(heapArr, t)
 }
 
+func TestHeapifyYEncolar(t *testing.T) {
+	t.Log("Comprobamos si luego de aplicar Heapify el Heap sigue funcionando correctamente al encolar")
+	heapArr := TDAHeap.CrearHeapArr(ARREGLO_STRINGS, mayorEntreStrings)
+	heapArr.Encolar("B")
+	require.EqualValues(t, heapArr.Cantidad(), 11)
+	require.EqualValues(t, heapArr.VerMax(), "W")
+
+	heapArr.Encolar("G")
+	require.EqualValues(t, heapArr.Cantidad(), 12)
+	require.EqualValues(t, heapArr.VerMax(), "W")
+
+	heapArr.Encolar("Y")
+	require.EqualValues(t, heapArr.Cantidad(), 13)
+	require.EqualValues(t, heapArr.VerMax(), "Y")
+}
+
+func TestHeapifyEncolarYDesencolar(t *testing.T) {
+	t.Log("Comprobamos si luego de aplicar Heapify el Heap sigue funcionando correctamente al encolar y desencolar")
+	heapArr := TDAHeap.CrearHeapArr(ARREGLO_STRINGS, mayorEntreStrings)
+
+	heapArr.Encolar("C")
+	require.EqualValues(t, heapArr.VerMax(), "W")
+	heapArr.Encolar("A")
+	require.EqualValues(t, heapArr.VerMax(), "W")
+	heapArr.Encolar("X")
+	require.EqualValues(t, heapArr.VerMax(), "X")
+	heapArr.Encolar("Z")
+	require.EqualValues(t, heapArr.VerMax(), "Z")
+
+	require.EqualValues(t, "Z", heapArr.Desencolar())
+	require.EqualValues(t, "X", heapArr.Desencolar())
+	require.EqualValues(t, "W", heapArr.Desencolar())
+
+}
+
+func TestHeapifyEncolarYDesencolarRepetidos(t *testing.T) {
+	t.Log("Verificamos que luego de aplicar Heapify se encolan y desencolan valores repetidos correctamente")
+	heapArr := TDAHeap.CrearHeapArr(ARREGLO_STRINGS, mayorEntreStrings)
+
+	heapArr.Encolar("W")
+	require.EqualValues(t, heapArr.VerMax(), "W")
+	heapArr.Encolar("Y")
+	require.EqualValues(t, heapArr.VerMax(), "Y")
+	heapArr.Encolar("Z")
+	require.EqualValues(t, heapArr.VerMax(), "Z")
+	heapArr.Encolar("Z")
+	require.EqualValues(t, heapArr.VerMax(), "Z")
+
+	require.EqualValues(t, "Z", heapArr.Desencolar())
+	require.EqualValues(t, "Z", heapArr.Desencolar())
+	require.EqualValues(t, "Y", heapArr.Desencolar())
+	require.EqualValues(t, "W", heapArr.Desencolar())
+	require.EqualValues(t, "W", heapArr.Desencolar())
+}
+
+func TestHeapifyArregloVacio(t *testing.T) {
+	t.Log("No entra en panico y funciona como deberia cuando se le hace Heapify a un arreglo vacio")
+	arrVacio := make([]string, 0, 1)
+	heapArrVacio := TDAHeap.CrearHeapArr(arrVacio, mayorEntreStrings)
+
+	require.True(t, heapArrVacio.EstaVacia())
+
+}
+
+func TestHeapifyElementosRepetidos(t *testing.T) {
+	t.Log("Aplicarle Heapify a un arreglo con elementos repetidos se comporta como un Heap")
+	heapArr := TDAHeap.CrearHeapArr(ARREGLO_INTS_REPETIDOS, mayorEntreInts)
+	arrOrdenado := make([]int, len(ARREGLO_INTS_REPETIDOS))
+	copy(arrOrdenado, ARREGLO_INTS_REPETIDOS)
+	sort.Ints(arrOrdenado)
+
+	for i := 5; i >= 0; i-- {
+		require.EqualValues(t, heapArr.VerMax(), arrOrdenado[i])
+		require.EqualValues(t, heapArr.Desencolar(), arrOrdenado[i])
+	}
+
+}
+
 func TestHeapsort(t *testing.T) {
 	t.Log("Heapsort devuelve un arreglo ordenado")
 	arr := TDAHeap.HeapSort(ARREGLO_INTS, mayorEntreInts)
 	for i := 0; i < 10; i++ {
 		require.EqualValues(t, i, arr[i])
+	}
+}
+
+func TestHeapSortArregloVacio(t *testing.T) {
+	t.Log("Heapsort funciona correctamente cuando recibe un arreglo vacio")
+	arrVacio := make([]int, 0, 1)
+	require.NotPanics(t, func() { TDAHeap.HeapSort(arrVacio, mayorEntreInts) })
+	arrOrdenado := TDAHeap.HeapSort(arrVacio, mayorEntreInts)
+	require.EqualValues(t, 0, len(arrOrdenado))
+}
+
+func TestHeapSortValoresRepetidos(t *testing.T) {
+	t.Log("Heapsort ordena correctamente cuando recibe un arreglo con valores repetidos")
+	arrOrdenado := TDAHeap.HeapSort(ARREGLO_STRINGS_REPETIDOS, mayorEntreStrings)
+	sort.Strings(ARREGLO_STRINGS_REPETIDOS)
+
+	for i := 0; i < len(arrOrdenado); i++ {
+		require.EqualValues(t, ARREGLO_STRINGS_REPETIDOS[i], arrOrdenado[i])
 	}
 }
 
