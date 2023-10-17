@@ -10,9 +10,7 @@ import (
 	"testing"
 )
 
-const (
-	_ELEM_TEST_COMUN = 15
-)
+const _ELEM_TEST_COMUN = 15
 
 var (
 	TAMS_VOLUMEN              = []int{12500, 25000, 50000, 100000, 200000, 400000}
@@ -22,7 +20,7 @@ var (
 	ARREGLO_INTS_REPETIDOS    = []int{2, 3, 5, 1, 3, 1}
 )
 
-//FUNC CMP -----------------------------------------------------------------------------------------------------------
+// FUNC CMP -----------------------------------------------------------------------------------------------------------
 
 func mayorEntreInts(clave1, clave2 int) int {
 	return clave1 - clave2
@@ -32,7 +30,7 @@ func mayorEntreStrings(clave1, clave2 string) int {
 	return strings.Compare(clave1, clave2)
 }
 
-//--------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 
 func colaVacia[T comparable](heap TDAHeap.ColaPrioridad[T], t *testing.T) {
 	require.PanicsWithValue(t, "La cola esta vacia", func() { heap.VerMax() })
@@ -49,13 +47,30 @@ func TestColaVacia(t *testing.T) {
 
 func TestColaDeUnElemento(t *testing.T) {
 	heap := TDAHeap.CrearHeap[int](mayorEntreInts)
-	t.Log("Guardar y borrar un solo elemento en dicc recién creado")
+	t.Log("Guardar y borrar un solo elemento en heap recién creado")
 	heap.Encolar(0)
 	require.EqualValues(t, 0, heap.VerMax())
 	require.EqualValues(t, 1, heap.Cantidad())
 	require.False(t, heap.EstaVacia())
 	require.EqualValues(t, 0, heap.Desencolar())
 	colaVacia(heap, t)
+}
+
+func TestCrearArrVacioYLlenarlo(t *testing.T) {
+	t.Log("Al crear un heap en base a un arreglo vacio, puede utilizarse como heap normalmente")
+	heapArr := TDAHeap.CrearHeapArr[string]([]string{}, mayorEntreStrings)
+	heapArr.Encolar("C")
+	require.EqualValues(t, heapArr.VerMax(), "C")
+	heapArr.Encolar("A")
+	require.EqualValues(t, heapArr.VerMax(), "C")
+	heapArr.Encolar("X")
+	require.EqualValues(t, heapArr.VerMax(), "X")
+	heapArr.Encolar("Z")
+	require.EqualValues(t, heapArr.VerMax(), "Z")
+
+	require.EqualValues(t, "Z", heapArr.Desencolar())
+	require.EqualValues(t, "X", heapArr.Desencolar())
+
 }
 
 func TestEncolarVariosElementosOrdenados(t *testing.T) {
@@ -105,7 +120,6 @@ func TestDesencolarHastaVacia(t *testing.T) {
 		heap.Desencolar()
 	}
 	colaVacia(heap, t)
-
 }
 
 func TestColaDeStrings(t *testing.T) {
@@ -193,11 +207,11 @@ func TestHeapifyEncolarYDesencolarRepetidos(t *testing.T) {
 }
 
 func TestHeapifyArregloVacio(t *testing.T) {
-	t.Log("No entra en panico y funciona como deberia cuando se le hace Heapify a un arreglo vacio")
-	arrVacio := make([]string, 0, 1)
+	t.Log("No entra en panico y funciona como heap vacio cuando se le hace Heapify a un arreglo vacio")
+	var arrVacio []string
 	heapArrVacio := TDAHeap.CrearHeapArr(arrVacio, mayorEntreStrings)
-
 	require.True(t, heapArrVacio.EstaVacia())
+	colaVacia(heapArrVacio, t)
 
 }
 
@@ -242,8 +256,8 @@ func TestHeapSortValoresRepetidos(t *testing.T) {
 }
 
 // PRUEBAS DE VOLUMEN -----------------------------------------------------------------------------------------------
-//Basadas en las pruebas de benchmark de hash de la cátedra con algunas modificaciones para que se ingresen elementos
-//desordenados y se apliquen las primitivas correspondientes
+// Basadas en las pruebas de benchmark de hash de la cátedra con algunas modificaciones para que se ingresen elementos
+// desordenados y se apliquen las primitivas correspondientes
 
 func swap(x *int, y *int) {
 	*x, *y = *y, *x
